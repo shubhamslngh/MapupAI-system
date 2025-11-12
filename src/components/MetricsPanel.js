@@ -28,7 +28,7 @@ export default function MetricsPanel() {
             : 0
 
     return (
-        <div className="w-104 h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
+        <div className="w-full h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
             <h2 className="font-semibold text-lg mb-4">Fleet Overview</h2>
 
             {/* Summary cards */}

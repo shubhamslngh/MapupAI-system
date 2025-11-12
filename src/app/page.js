@@ -8,7 +8,6 @@ import MetricsPanel from "@/components/MetricsPanel";
 import { useFleetStore } from "@/store/fleetStore";
 import AlertsPanel from "@/components/AlertsPanel";
 
-
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
   loading: () => (
@@ -21,7 +20,7 @@ const MapView = dynamic(() => import("@/components/MapView"), {
 export default function DashboardPage() {
   const { infoPanelOpen, settingsPanelOpen, alertPanelOpen } = useFleetStore();
 
-  // Only one panel visible at a time (Info OR Metrics)
+  // ✅ Detect which panel is active
   const activePanel = infoPanelOpen
     ? "info"
     : settingsPanelOpen
@@ -31,18 +30,19 @@ export default function DashboardPage() {
         : null;
 
   return (
-    <div className="flex h-screen bg-[#f6f7fb] text-gray-900 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-dvh w-full bg-[#f6f7fb] text-gray-900 overflow-hidden">
+      {/* Sidebar (hidden on mobile, fixed on large) */}
       <SidebarNav />
 
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         <HeaderBar />
 
-        <div className="flex flex-1 relative overflow-hidden p-4">
-          {/* ---------- Left Panel (Shared Slot for Info or Metrics) ---------- */}
+        <div className="flex flex-1 relative overflow-hidden lg:p-4 p-2">
+          {/* ---------- Left Panel (Shared Slot for Info / Metrics / Alerts) ---------- */}
           <div
-            className={`absolute lg:static z-40 top-0 left-0 h-full bg-white rounded-2xl shadow-lg transition-all duration-500 ${activePanel ? "translate-x-0 w-fit" : "-translate-x-full w-0"
-              }`}
+            className={`absolute lg:static z-40 top-0 left-0 h-full bg-white rounded-2xl shadow-lg transition-all duration-500 
+            ${activePanel ? "translate-x-0 w-full sm:w-88" : "-translate-x-full w-0"} 
+            sm:max-w-88`}
           >
             {activePanel === "info" && (
               <div className="h-full overflow-y-auto p-4">
@@ -55,8 +55,8 @@ export default function DashboardPage() {
               </div>
             )}
             {activePanel === "alert" && (
-              <div className="h-full overflow-y-auto p-5">
-                <div className="flex items-center justify-between mb-4">
+              <div className="h-full overflow-y-auto p-4">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Fleet Alerts</h2>
                 </div>
                 <AlertsPanel />
@@ -66,13 +66,13 @@ export default function DashboardPage() {
 
           {/* ---------- Map Section ---------- */}
           <div
-            className={`flex-1 bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-500 ml-2.5`}
+            className={`flex-1 bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-500 
+            ml-0 lg:ml-2.5`}
           >
             <MapView />
           </div>
         </div>
       </div>
-
     </div>
   );
 }

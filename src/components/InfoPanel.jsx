@@ -37,7 +37,7 @@ export default function InfoPanel() {
     lat && lng ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : "-";
 
   return (
-    <div className="w-[26rem] h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
+    <div className="w-full max-sm:w-full h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
       <h2 className="font-semibold text-lg mb-4">Trip Information</h2>
 
       {/* 🚚 Active Trip Summary */}
