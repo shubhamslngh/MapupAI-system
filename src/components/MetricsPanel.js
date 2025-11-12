@@ -11,7 +11,6 @@ import { Switch } from "@/components/ui/switch"
 export default function MetricsPanel() {
     const {
         vehicles,
-        advanceSimulation,
         isPlaying,
         togglePlay,
         playbackSpeed,

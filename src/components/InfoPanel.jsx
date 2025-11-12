@@ -4,6 +4,7 @@ import { useFleetStore } from "@/store/fleetStore";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import VehicleMetrics from "@/components/VehicleMetrics";
 import {
   MapPin,
   Route,
@@ -11,9 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   Truck,
-  Battery,
-  Signal,
-  Gauge,
 } from "lucide-react";
 
 export default function InfoPanel() {
@@ -37,70 +35,14 @@ export default function InfoPanel() {
     lat && lng ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : "-";
 
   return (
-    <div className="w-full max-sm:w-full h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
+    <div className="w-full h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
       <h2 className="font-semibold text-lg mb-4">Trip Information</h2>
 
-      {/* 🚚 Active Trip Summary */}
+      {/* 🚚 Active Trip Overview */}
       {selected && (
-        <Card className="p-4 rounded-xl border border-blue-200 bg-linear-to-r from-blue-50 to-indigo-50 shadow-sm mb-5">
-          <div className="flex items-center justify-between ">
-            <div className="flex items-center gap-2">
-              <Truck className="text-blue-500 h-5 w-5" />
-              <p className="font-semibold text-sm">{selected.vehicleId}</p>
-            </div>
-            <Badge
-              variant="outline"
-              className={`capitalize border ${
-                selected.status?.includes("completed")
-                  ? "bg-green-100 text-green-700 border-green-200"
-                  : selected.status?.includes("cancelled")
-                  ? "bg-red-100 text-red-700 border-red-200"
-                  : "bg-blue-100 text-blue-700 border-blue-200"
-              }`}>
-              {selected.status?.replaceAll("_", " ")}
-            </Badge>
-          </div>
-
-          <p className="text-xs text-gray-500">
-            Trip ID: <span className="font-medium">{selected.tripName}</span>
-          </p>
-
-          <div className="grid grid-cols-3 gap-3 text-center text-xs text-gray-600 mb-2">
-            <div className="flex flex-col items-center">
-              <Gauge className="h-4 w-4 text-blue-600 mb-1" />
-              <p>{selected.speed?.toFixed(1) || 0} km/h</p>
-              <span className="text-[10px] text-gray-400">Speed</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <Battery className="h-4 w-4 text-emerald-500 mb-1" />
-              <p>{selected.battery?.toFixed(0) || 0}%</p>
-              <span className="text-[10px] text-gray-400">Battery</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <Signal className="h-4 w-4 text-orange-500 mb-1" />
-              <p>{selected.signal || "N/A"}</p>
-              <span className="text-[10px] text-gray-400">Signal</span>
-            </div>
-          </div>
-
-          <div className="flex justify-between text-xs text-gray-600 mt-3">
-            <p>Distance: {selected.distance?.toFixed(2) || 0} km</p>
-            <p>
-              Position:{" "}
-              <span className="font-medium">
-                {formatCoords(selected.lat, selected.lng)}
-              </span>
-            </p>
-          </div>
-
-          <Button
-            variant="default"
-            size="sm"
-            className="mt-4 w-full shadow-sm"
-            onClick={togglePlay}>
-            {isPlaying ? "⏸ Pause Simulation" : "▶️ Resume Simulation"}
-          </Button>
-        </Card>
+        <div className="shrink-0">
+          <VehicleMetrics />
+        </div>
       )}
 
       {/* 🧭 Trip Selector */}
@@ -120,8 +62,8 @@ export default function InfoPanel() {
         </select>
       </div>
 
-      {/* 🗺 Fleet Trip Cards */}
-      <div className="flex items-center justify-between mb-2 mt-1">
+      {/* 🗺 Fleet Trip List */}
+      <div className="flex flex-col gap-3 overflow-y-visible pb-4">
         <h2 className="font-semibold text-md">Fleet Trips</h2>
         <Button
           size="sm"
@@ -131,7 +73,7 @@ export default function InfoPanel() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-3 overflow-y-auto">
+      <div className="flex flex-col gap-3 overflow-y-visible pb-4">
         {vehicles.length === 0 && (
           <p className="text-sm text-muted-foreground">Loading trips...</p>
         )}

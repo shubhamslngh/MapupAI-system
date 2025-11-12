@@ -1,177 +1,150 @@
-"use client";
-import { useEffect } from "react";
-import { useFleetStore } from "@/store/fleetStore";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import VehicleMetrics from "@/components/VehicleMetrics";
+"use client"
+
 import {
+    Gauge,
+    Compass,
     MapPin,
-    Route,
-    PlayCircle,
-    CheckCircle2,
-    XCircle,
+    Battery,
+    Zap,
+    SignalHigh,
+    AlertTriangle,
+    Clock,
+    ArrowUp,
     Truck,
-} from "lucide-react";
+} from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { useFleetStore } from "@/store/fleetStore"
 
-export default function InfoPanel() {
-    const {
-        vehicles,
-        loadTrips,
-        selectedVehicleId,
-        setSelectedVehicle,
-        togglePlay,
-        isPlaying,
-    } = useFleetStore();
+export default function VehicleMetrics() {
+    const { vehicles, selectedVehicleId } = useFleetStore()
 
-    useEffect(() => {
-        if (vehicles.length === 0) loadTrips();
-    }, []);
+    // If user hasn’t clicked anything yet, we just take first vehicle
+    const activeVehicle =
+        vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0]
 
-    const selected =
-        vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0];
+    if (!activeVehicle || !activeVehicle.events?.length) {
+        return (
+            <div className="text-sm text-muted-foreground p-3">
+                Click on any trip to see its live metrics here.
+            </div>
+        )
+    }
 
-    const formatCoords = (lat, lng) =>
-        lat && lng ? `${lat.toFixed(2)}, ${lng.toFixed(2)}` : "-";
+    const current = activeVehicle.events[activeVehicle.index] || {}
+
+    // calculating trip progress (simple distance %)
+    const plannedDistance = activeVehicle.events[0]?.planned_distance_km || 100
+    const travelled = current.distance || 0
+    const percent = Math.min((travelled / plannedDistance) * 100, 100).toFixed(1)
 
     return (
-        <div className="w-[26rem] h-full flex flex-col bg-white/70 backdrop-blur-xl border border-neutral-200 dark:border-white/10 shadow-sm rounded-2xl p-5 overflow-y-auto">
-            <h2 className="font-semibold text-lg mb-4">Trip Information</h2>
-
-            {/* 🚚 Active Trip Card */}
-            {selected && (
-                <Card className="p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm mb-6 transition-all">
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                            <Truck className="text-blue-500 h-5 w-5" />
-                            <p className="font-semibold text-sm">{selected.vehicleId}</p>
-                        </div>
-                        <Badge
-                            variant="outline"
-                            className={`capitalize border ${selected.status?.includes("completed")
-                                    ? "bg-green-100 text-green-700 border-green-200"
-                                    : selected.status?.includes("cancelled")
-                                        ? "bg-red-100 text-red-700 border-red-200"
-                                        : "bg-blue-100 text-blue-700 border-blue-200"
-                                }`}
-                        >
-                            {selected.status?.replaceAll("_", " ")}
-                        </Badge>
+        <Card className=" w-full p-4 mt-4 space-y-5">
+            {/* Top header showing vehicle name and trip ID */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-blue-500" />
+                    <div>
+                        <h3 className="font-semibold text-lg">
+                            {activeVehicle.vehicleId}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                            Trip ID: {activeVehicle.tripName}
+                        </p>
                     </div>
-
-                    <p className="text-xs text-gray-500 mb-3">
-                        Trip ID: <span className="font-medium">{selected.tripName}</span>
-                    </p>
-
-                    {/* Inline metrics */}
-                    <VehicleMetrics />
-
-                    <Button
-                        variant="default"
-                        size="sm"
-                        className="mt-4 w-full shadow-sm"
-                        onClick={togglePlay}
-                    >
-                        {isPlaying ? "⏸ Pause Simulation" : "▶️ Resume Simulation"}
-                    </Button>
-                </Card>
-            )}
-
-            {/* 🧭 Trip Selector */}
-            <div className="mb-4">
-                <h3 className="font-semibold text-sm mb-2 text-gray-700">
-                    Select another trip
-                </h3>
-                <select
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                    value={selectedVehicleId || ""}
-                    onChange={(e) => setSelectedVehicle(Number(e.target.value))}
-                >
-                    {vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                            {v.vehicleId} — {v.status?.replaceAll("_", " ")}
-                        </option>
-                    ))}
-                </select>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                    {percent}% Completed
+                </div>
             </div>
 
-            {/* 🗺 Fleet Trip List */}
-            <div className="flex items-center justify-between mb-2 mt-1">
-                <h2 className="font-semibold text-md">Fleet Trips</h2>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedVehicle(null)}
-                >
-                    👁 View All
-                </Button>
-            </div>
+            {/* Trip completion progress bar */}
+            <Progress value={percent} className="h-2" />
 
-            <div className="flex flex-col gap-3 overflow-y-auto">
-                {vehicles.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Loading trips...</p>
-                )}
+            {/* Grid of metrics */}
+            <div className="grid w-fit grid-cols-2 sm:grid-cols-2 gap-4 pt-2">
+                <Metric
+                    icon={<Gauge className="text-blue-500" />}
+                    label="Speed"
+                    value={`${current.speed} km/h`}
+                />
 
-                {vehicles.map((v) => {
-                    const isActive = selectedVehicleId === v.id;
-                    const start = v.path?.[0];
-                    const end = v.path?.[v.path.length - 1];
-                    const tripStatus = v.status?.includes("completed")
-                        ? "completed"
-                        : v.status?.includes("cancelled")
-                            ? "cancelled"
-                            : "active";
+                {/* Heading */}
+                <Metric
+                    icon={<Compass className="text-green-500 " />}
+                    label="Heading"
+                    value={`${current.heading}°`}
+                />
 
-                    return (
-                        <Card
-                            key={v.id}
-                            onClick={() => setSelectedVehicle(v.id)}
-                            className={`p-3 cursor-pointer transition-all duration-300 rounded-lg ${isActive
-                                    ? "border-2 border-blue-500 bg-blue-50/80 shadow-md"
-                                    : "border border-gray-200 hover:bg-gray-50"
+                {/* Distance */}
+                <Metric
+                    icon={<MapPin className="text-purple-500" />}
+                    label="Distance"
+                    value={`${travelled.toFixed(2)} km`}
+                />
+
+                {/* Altitude */}
+                <Metric
+                    icon={<ArrowUp className="text-amber-500" />}
+                    label="Altitude"
+                    value={`${current.altitude.toFixed(1)} m`}
+                />
+
+                {/* Signal */}
+                <Metric
+                    icon={<SignalHigh className="text-emerald-500" />}
+                    label="Signal"
+                    value={current.signal}
+                />
+
+                {/* Battery */}
+                <Metric
+                    icon={<Battery className="text-yellow-500" />}
+                    label="Battery"
+                    value={`${current.battery.toFixed(1)}%`}
+                />
+
+                {/* Charging */}
+                <Metric
+                    icon={<Zap className="text-cyan-500" />}
+                    label="Charging"
+                    value={current.charging ? "Yes ⚡" : "No"}
+                />
+
+                {/* Overspeed */}
+                <Metric
+                    icon={
+                        <AlertTriangle
+                            className={`${current.overspeed ? "text-red-500" : "text-muted-foreground"
                                 }`}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Truck
-                                        className={`h-4 w-4 ${isActive ? "text-blue-600" : "text-gray-400"
-                                            }`}
-                                    />
-                                    <p
-                                        className={`font-medium text-sm ${isActive ? "text-blue-700" : "text-gray-700"
-                                            }`}
-                                    >
-                                        {v.vehicleId}
-                                    </p>
-                                </div>
-                                {tripStatus === "completed" ? (
-                                    <CheckCircle2 className="text-green-500 h-4 w-4" />
-                                ) : tripStatus === "cancelled" ? (
-                                    <XCircle className="text-red-500 h-4 w-4" />
-                                ) : (
-                                    <PlayCircle className="text-blue-500 h-4 w-4" />
-                                )}
-                            </div>
+                        />
+                    }
+                    label="Overspeed"
+                    value={current.overspeed ? "Yes ⚠️" : "No"}
+                />
 
-                            <div className="mt-2 text-xs space-y-1 text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                    <MapPin className="h-3 w-3 text-emerald-500" />
-                                    <span>Start: {formatCoords(start?.[0], start?.[1])}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Route className="h-3 w-3 text-orange-500" />
-                                    <span>Dest: {formatCoords(end?.[0], end?.[1])}</span>
-                                </div>
-                            </div>
-
-                            <p className="text-xs mt-2 text-muted-foreground">
-                                {v.status?.replaceAll("_", " ")} •{" "}
-                                {v.speed ? `${v.speed.toFixed(1)} km/h` : "0 km/h"}
-                            </p>
-                        </Card>
-                    );
-                })}
+                {/* Last updated time */}
+                <Metric
+                    icon={<Clock className="text-gray-500" />}
+                    label="Last Update"
+                    value={current.timestamp?.toLocaleTimeString() || "-"}
+                />
             </div>
+        </Card>
+    )
+}
+
+function Metric({ icon, label, value }) {
+    return (
+        <div className="flex flex-col items-start gap-1">
+            {/* Icon + Label */}
+            <div className="flex items-center gap-2">
+                {icon}
+                <span className="text-sm font-medium">{label}</span>
+            </div>
+
+            {/* Value below */}
+            <span className="text-sm text-muted-foreground ml-7">{value}</span>
         </div>
-    );
+    )
 }
